@@ -4,52 +4,13 @@ using System.Text.Json;
 using System.Net;
 
 using Beck_end_lib.Get_Sort_Requests.SEND;
+using Beck_end_lib.Get_Sort_Requests.Serialize_Classes;
 
 
 namespace Beck_end_lib.Get_Sort_Requests.GET
 {
-    public class About_Order_Serialize
-    {
-        public int? ID_Order { get; set; }
-        public string? Name_book { get; set; }
-        public string? Date_Get_order { get; set; }
-        public string? Date_Return_Book { get; set; }
-        public string? Date_Need_Return { get; set; }
-
-    }
-
-    public class About_Client_Serialize
-    {
-        public int? ID_client { get; set; }
-        public string? Full_name_client { get; set; }
-        public string? Number_Phone_client { get; set; }
-        public string? Email_Client { get; set; }
-        public string? Address_client { get; set; }
-        public string? NIE_code_client { get; set; }
-        public List<About_Order_Serialize>? List_books { get; set; }
-
-    }
     internal class Get_About_Info_Client
     {
-        public string sql_script = @"SELECT 
-dbo.Reader_Person.Person_ID, dbo.Issued_Books.ID_Order, dbo.Reader_Person.Full_Name, dbo.Reader_Person.Numer_Phone, dbo.Reader_Person.Email, 
-dbo.Reader_Person.Address, dbo.Reader_Person.NIE_Code, dbo.Reader_Person.Add_Details_Person, dbo.Book.Name_Book, dbo.Issued_Books.Date_Get, dbo.Issued_Books.Date_Return,
-dbo.Issued_Books.Date_Need_Return
-FROM dbo.Reader_Person
-JOIN dbo.Issued_Books 
-ON dbo.Issued_Books.ID_Reader = dbo.Reader_Person.Person_ID
-JOIN dbo.Book
-ON dbo.Book.ID_Book = dbo.Issued_Books.ID_book;";
-
-        public string sql_select_info_client = @"SELECT 
-dbo.Issued_Books.ID_Order, dbo.Book.Name_Book, dbo.Issued_Books.Date_Get, dbo.Issued_Books.Date_Return,  dbo.Issued_Books.Date_Need_Return
-FROM dbo.Reader_Person
-JOIN dbo.Issued_Books 
-ON dbo.Issued_Books.ID_Reader = dbo.Reader_Person.Person_ID
-JOIN dbo.Book
-ON dbo.Book.ID_Book = dbo.Issued_Books.ID_book
-WHERE dbo.Reader_Person.Person_ID = ";
-
         string convet_string_for_like(string s)
         {
             string[] temp = s.Split("%22");
@@ -64,15 +25,15 @@ WHERE dbo.Reader_Person.Person_ID = ";
                 return res2;
             }
             else return "%" + temp[0] + "%";
-            
+
         }
 
-            List<About_Order_Serialize> get_list_orders_clien(int client_ID, HttpListenerResponse resp)
+        List<About_Order_Serialize> get_list_orders_clien(int client_ID, HttpListenerResponse resp)
         {
             SqlConnection sqlConnection = new SqlConnection(ConfigurationManager.ConnectionStrings["DBconfingLink"].ConnectionString);
             sqlConnection.Open();
             List<About_Order_Serialize> list_order_person = new List<About_Order_Serialize>();
-            string sql_select = sql_select_info_client + client_ID.ToString() + ";";
+            string sql_select = new SQL_GET().sql_get_info_client + client_ID.ToString() + ";";
 
             try
             {
@@ -104,7 +65,7 @@ WHERE dbo.Reader_Person.Person_ID = ";
         }
         public void SEND_AND_SERIALIZE_JSON(HttpListenerResponse resp, SqlConnection con, string customSQL)
         {
-            SqlCommand sqlCommandRun = new SqlCommand(customSQL == "" ? sql_script: customSQL, con);
+            SqlCommand sqlCommandRun = new SqlCommand(customSQL == "" ? new SQL_GET().sql_get_all_clients : customSQL, con);
             List<About_Client_Serialize> list_cliens_data = new List<About_Client_Serialize>();
 
             try
@@ -143,7 +104,40 @@ WHERE dbo.Reader_Person.Person_ID = ";
                         });
                     }
                 }
+                IEnumerable< About_Client_Serialize > dataList = list_cliens_data.DistinctBy(x => x.ID_client);
 
+                string data = JsonSerializer.Serialize(dataList);
+                Send.SendData(resp, data);
+            }
+            catch (Exception)
+            {
+                Send.SendData(resp, "{\"Error\" : \"Incorrect URL\"}");
+                return;
+            }
+        }
+
+
+        public void SQL_GET_CLIENTS(HttpListenerResponse resp, SqlConnection con)
+        {
+            SqlCommand sqlCommandRun = new SqlCommand(new SQL_GET().sqlSriptWithoutOrder, con);
+            List<About_Client_Serialize> list_cliens_data = new List<About_Client_Serialize>();
+
+            try
+            {
+                SqlDataReader reader = sqlCommandRun.ExecuteReader();
+                while (reader.Read())
+                {
+                    list_cliens_data.Add(new About_Client_Serialize
+                    {
+                        ID_client = (int)reader["Person_ID"],
+                        Full_name_client = (string)reader["Full_Name"],
+                        Number_Phone_client = (string)reader["Numer_Phone"],
+                        Email_Client = (string)reader["Email"],
+                        Address_client = (string)reader["Address"],
+                        NIE_code_client = (string)reader["NIE_Code"],
+                    });
+
+                }
 
                 string data = JsonSerializer.Serialize(list_cliens_data);
                 Send.SendData(resp, data);
@@ -155,13 +149,11 @@ WHERE dbo.Reader_Person.Person_ID = ";
             }
         }
 
-
-
         public void SQL_SEARCH_CLIENT(HttpListenerResponse resp, SqlConnection con, string url)
         {
             string[] request = url.Split('?');
             string[] stringReq = request[1].Split("&");
-            string resAddRequest = sql_script[..^1];
+            string resAddRequest = new SQL_GET().sql_get_all_clients[..^1];
 
 
             string[] tempR = stringReq[0].Split("=");

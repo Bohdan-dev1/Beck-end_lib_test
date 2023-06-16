@@ -26,7 +26,7 @@ namespace Program
                 Console.WriteLine("Connection DB");
 
                 var listener = new HttpListener();
-                listener.Prefixes.Add("http://localhost:4444/");
+                listener.Prefixes.Add("http://127.0.0.1:4444/");
                 listener.Start();
 
                 Console.ForegroundColor = ConsoleColor.White;
@@ -52,17 +52,37 @@ namespace Program
                     resp.StatusDescription = "Status, OK";
                     resp.Headers.Set("Content-Type", "text/plain");
 
-                    Beck_end_lib.Get_Sort_Requests.IAnswerProcessor gsd = new GetSortDATA();
 
                     switch (requestMethod)
                     {
                         case "GET":
                             logClass.log_function(("Log <" + DateTime.Now.ToString() + "> (" + requestMethod + ") http://localhost:4444" + URL), false, requestMethod);
-                            
+
+                            IAnswerProcessor gsd = new GetSortDATA();
                             gsd.IAprocessor(new GET_CLASS(), resp, sqlConnection, URL, rawURL);
                             break;
 
+                        case "POST":
+                            logClass.log_function(("Log <" + DateTime.Now.ToString() + "> (" + requestMethod + ") http://localhost:4444" + URL), false, requestMethod);
 
+                            IAnswerProcessorPost postAnswer = new PostClassAPI();
+                            postAnswer.Post(new POST_CLASS(), resp, sqlConnection, URL, rawURL);
+
+                            break;
+
+                        case "PUT":
+                            logClass.log_function(("Log <" + DateTime.Now.ToString() + "> (" + requestMethod + ") http://localhost:4444" + URL), false, requestMethod);
+
+                            IAnswerProcessorUpdate answerUpdate = new UpdateCLassAPI();
+                            answerUpdate.Put(new UPDATE_CLASS(), resp, sqlConnection, URL, rawURL);
+                            break;
+
+                        case "DELETE":
+                            logClass.log_function(("Log <" + DateTime.Now.ToString() + "> (" + requestMethod + ") http://localhost:4444" + URL), false, requestMethod);
+
+                            IAnswerProcessorDELETE answerDelete = new DeleteClassAPI();
+                            answerDelete.DELETE(new DELETE_CLASS(), resp, sqlConnection, URL, rawURL);
+                            break;
 
                         default:
                             Default_Request default_Request = new Default_Request();

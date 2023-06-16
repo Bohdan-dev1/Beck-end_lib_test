@@ -2,23 +2,14 @@
 using Newtonsoft.Json.Linq;
 using System.Text.Json;
 using System.Net;
-
-using Beck_end_lib.Get_Sort_Requests.SEND;
 using System.Text;
+
+using Beck_end_lib.Get_Sort_Requests.Serialize_Classes;
+using Beck_end_lib.Get_Sort_Requests.SEND;
+
 
 namespace Beck_end_lib.Get_Sort_Requests.GET
 {
-    public class About_Books_Serialize
-    {
-        public int? ID_Book { get; set; }
-        public string? Name_Book { get; set; }
-        public int? How_many_books { get; set; }
-        public string? Full_Name_Author { get; set; }
-        public string? Yeer_Public { get; set; }
-        public List<string>? Ahter_books { get; set; }
-
-    }
-
     public class Ather_Book_List
     {
 
