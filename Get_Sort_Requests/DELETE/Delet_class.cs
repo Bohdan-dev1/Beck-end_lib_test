@@ -1,5 +1,6 @@
 ﻿using Beck_end_lib.Get_Sort_Requests.GET;
 using Beck_end_lib.Get_Sort_Requests.Serialize_Classes;
+using Beck_end_lib.Get_Sort_Requests.UPDATE;
 using Microsoft.Data.SqlClient;
 using System.Net;
 
@@ -16,12 +17,17 @@ namespace Beck_end_lib.Get_Sort_Requests.DELETE
             try
             {
                 string sql_delete_order = new DELETE_sql().delete_order;
+                string getIDbook = new SQL_GET().getIdBookByIdOrder;
+                string varUPDATE = new Update_class_sql().update_var;
+                string idBook = "";
                 string value;
 
                 if (valuePairs.TryGetValue("ID_Order", out value))
                 {
                     valuePairs["ID_Order"] = Get_Value.FieldsFromURL(valuePairs["ID_Order"]);
                     sql_delete_order += " CONVERT( varchar,  ID_Order ) = '" + valuePairs["ID_Order"] + "'";
+
+                    getIDbook += valuePairs["ID_Order"];
                 }
                 else
                 {
@@ -31,8 +37,23 @@ namespace Beck_end_lib.Get_Sort_Requests.DELETE
                     return;
                 }
 
+                
+                SqlCommand sqlCommandGetID = new SqlCommand(getIDbook, con);
+                SqlDataReader sqlDataReader = sqlCommandGetID.ExecuteReader();
+
+                while (sqlDataReader.Read()) idBook += sqlDataReader["ID_Book"].ToString();
+                varUPDATE += idBook + ";";
+                varUPDATE += new Update_class_sql().update_count_books_increment;
+                con.Close();
+
+                con.Open();
                 SqlCommand sqlCommand = new SqlCommand(sql_delete_order, con);
                 sqlCommand.ExecuteNonQuery();
+                con.Close();
+
+                con.Open();
+                SqlCommand sqlCommandUpdate = new SqlCommand(varUPDATE, con);
+                sqlCommandUpdate.ExecuteNonQuery();
 
                 HTTP_msg http_MsgT = new HTTP_msg();
                 http_MsgT.handle_msg(resp, "Deleted Order", "HTTP 1.1 OK 200");

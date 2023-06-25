@@ -79,6 +79,14 @@ FROM dbo.Reader_Person;";
             }
         }
 
+        public string? getIdBookByIdOrder
+        {
+            get
+            {
+                return "SELECT dbo.Issued_Books.ID_book FROM dbo.Issued_Books WHERE dbo.Issued_Books.ID_Order = ";
+            }
+        }
+
         public bool isInTable(SqlConnection con, List<Class_ROW_Client> arg, string table, string keyROW, string ROWend, string check_row)
         {
             string res_sql = "";

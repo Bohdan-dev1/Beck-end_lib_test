@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Beck_end_lib.Get_Sort_Requests.UPDATE
 {
-    internal class Update_class_sql
+    public class Update_class_sql
     {
         public string? update_var
         {
@@ -24,6 +24,14 @@ namespace Beck_end_lib.Get_Sort_Requests.UPDATE
             get
             {
                 return "SELECT dbo.Number_Of_Books.ID, dbo.Number_Of_Books.How_many FROM dbo.Number_Of_Books\r\nWHERE dbo.Number_Of_Books.ID_Book = @ID\r\nUPDATE dbo.Number_Of_Books SET How_many = (How_many - 1)\r\nWHERE dbo.Number_Of_Books.ID_Book = @ID;";
+            }
+        }
+
+        public string? update_count_books_increment
+        {
+            get
+            {
+                return "UPDATE dbo.Number_Of_Books SET How_many = (How_many + 1) WHERE dbo.Number_Of_Books.ID_Book = @ID;";
             }
         }
 
